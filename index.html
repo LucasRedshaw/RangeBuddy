@@ -645,8 +645,9 @@
         <h2>How it works</h2>
         <ul class="summary-list">
           <li><span>1. Hit your shot</span><b></b></li>
-          <li><span>2. Tap GOOD or POOR</span><b></b></li>
-          <li><span>3. Follow the path</span><b></b></li>
+          <li><span>2. Consider if your shot was acceptable in the context of your own abilities </span><b></b></li>
+          <li><span>3. Tap GOOD or POOR</span><b></b></li>
+          <li><span>4. Follow the path</span><b></b></li>
           <li><span>Finish each hole</span><b></b></li>
         </ul>
       </div>
@@ -656,7 +657,7 @@
   <section class="menu" id="menuScreen">
     <div class="menu-card">
       <h1 class="brand">Range Buddy</h1>
-      <p class="menu-copy">Play a clean 9-hole range round using simple good/poor decisions. No course graphics, no overthinking, just structured club changes.</p>
+      <p class="menu-copy">Play a 9-hole range round using simple good/poor decisions.</p>
 
       <div class="round-card">
         <div class="label">Round</div>
@@ -725,10 +726,10 @@
 
   <script>
     const shotHints = {
-      tee: "Tee shot. Pick the club that fits the hole and your current practice focus.",
-      long: "Long approach. Choose the longer approach club that makes sense for you.",
-      short: "Short approach. Controlled iron or shorter scoring approach.",
-      wedge: "Wedge shot. Simple scoring-shot intent, judged by your own standard.",
+      tee: "Tee shot. Dr, 3w, Di,  etc.",
+      long: "Long approach. 5w, 7w, 5i, 6i, 7i, etc.",
+      short: "Short approach. 8i, 9i, Pw, etc.",
+      wedge: "Wedge shot. Aw, Gw, Sw, 60, etc.",
       finish: "Hole complete."
     };
 
@@ -834,15 +835,15 @@
     }
 
     const holes = [
-      buildHole(1, 4, "Opening Par 4", ["tee", "long", "wedge"]),
-      buildHole(2, 3, "Target Par 3", ["tee", "wedge"]),
-      buildHole(3, 4, "Balanced Par 4", ["tee", "long", "short"]),
-      buildHole(4, 5, "Reachable Par 5", ["tee", "long", "long", "wedge"]),
-      buildHole(5, 4, "Control Par 4", ["tee", "long", "wedge"]),
-      buildHole(6, 3, "Scoring Par 3", ["tee", "wedge"]),
-      buildHole(7, 4, "Pressure Par 4", ["tee", "long", "short"]),
-      buildHole(8, 5, "Finishing Par 5", ["tee", "long", "long", "wedge"]),
-      buildHole(9, 4, "Final Par 4", ["tee", "long", "wedge"])
+      buildHole(1, 4, "Par 4", ["tee", "long", "wedge"]),
+      buildHole(2, 3, "Par 3", ["tee", "wedge"]),
+      buildHole(3, 4, "Par 4", ["tee", "long", "short"]),
+      buildHole(4, 5, "Par 5", ["tee", "long", "long", "wedge"]),
+      buildHole(5, 4, "Par 4", ["tee", "long", "wedge"]),
+      buildHole(6, 3, "Par 3", ["tee", "wedge"]),
+      buildHole(7, 4, "Par 4", ["tee", "long", "short"]),
+      buildHole(8, 5, "Par 5", ["tee", "long", "long", "wedge"]),
+      buildHole(9, 4, "Par 4", ["tee", "long", "wedge"])
     ];
 
     let holeIndex = 0;
