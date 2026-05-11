@@ -127,6 +127,46 @@
       margin-top: 12px;
     }
 
+    .stats-panel {
+      margin-top: 14px;
+    }
+
+    .stat-grid-large {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .shot-stat {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid #ececec;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--good);
+    }
+
+    .stats-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
     .history-item {
       display: flex;
       align-items: center;
@@ -648,8 +688,17 @@
           <li><span>2. Consider if your shot was acceptable in the context of your own abilities </span><b></b></li>
           <li><span>3. Tap GOOD or POOR</span><b></b></li>
           <li><span>4. Follow the path</span><b></b></li>
-          <li><span>Finish each hole</span><b></b></li>
+          <li><span>5. Finish each hole</span><b></b></li>
         </ul>
+      </div>
+
+      <div class="round-card">
+        <h2>Why it works</h2>
+        
+        <p class="hint">
+          Research in motor learning shows that <b>random practice</b> (switching tasks frequently) leads to better long-term performance than <b>blocked practice</b> (repeating the same shot). 
+          This is known as the <b>contextual interference effect</b>. While blocked practice can feel easier in the moment, random practice improves retention, adaptability, and transfer to real situations—like playing on a course.
+        </p>
       </div>
       <button class="start-btn" id="enterAppBtn">Play</button>
     </div>
@@ -671,7 +720,9 @@
       </div>
 
       <button class="start-btn" id="startRoundBtn">Start 9 hole round</button>
+      <button class="menu-btn" id="viewStatsBtn">View stats</button>
       <button class="menu-btn" id="viewHistoryBtn">View history</button>
+      <div id="statsWrap" class="hidden"></div>
       <div id="historyWrap" class="hidden"></div>
     </div>
   </section>
@@ -726,7 +777,7 @@
 
   <script>
     const shotHints = {
-      tee: "Tee shot. Dr, 3w, Di,  etc.",
+      tee: "Tee shot. Dr, 3w, Di, etc.",
       long: "Long approach. 5w, 7w, 5i, 6i, 7i, etc.",
       short: "Short approach. 8i, 9i, Pw, etc.",
       wedge: "Wedge shot. Aw, Gw, Sw, 60, etc.",
@@ -808,6 +859,15 @@
         date:new Date().toISOString(),
         totalScore:roundScore(),
         totalStrokes:holeResults.reduce((s,r)=>s+(r?.total||0),0),
+        shots:holeStates.flatMap((state,holeIndex)=>
+          state?.log?.map(item=>({
+            hole:holeIndex+1,
+            type:item.type,
+            title:item.title,
+            result:item.result,
+            penalty:item.penalty||0
+          }))||[]
+        ),
         holes:holeResults.map((r,i)=>({hole:i+1,par:holes[i].par,strokes:r?.total||0,score:r?.score||0}))
       };
       rounds.unshift(round);
@@ -832,6 +892,74 @@
       rounds.splice(index,1);
       localStorage.setItem("rangeBuddyRounds",JSON.stringify(rounds));
       renderHistory();
+      renderStats();
+    }
+
+    function avg(values){
+      if(!values.length)return null;
+      return values.reduce((s,v)=>s+v,0)/values.length;
+    }
+
+    function renderStats(){
+      const rounds=getRounds();
+      if(!rounds.length){
+        statsWrap.innerHTML="<div class='round-card stats-panel'><p class='hint'>No completed rounds yet. Finish a 9-hole round to build your stats.</p></div>";
+        return;
+      }
+
+      const scores=rounds.map(r=>r.totalScore);
+      const strokes=rounds.map(r=>r.totalStrokes);
+      const bestScore=Math.min(...scores);
+      const averageScore=avg(scores);
+      const averageStrokes=avg(strokes);
+      const bestRound=rounds.find(r=>r.totalScore===bestScore);
+      const allShots=rounds.flatMap(r=>r.shots||[]);
+      const goodShots=allShots.filter(s=>s.result==="GOOD").length;
+      const successRate=allShots.length?Math.round((goodShots/allShots.length)*100):0;
+
+      const byType=["tee","long","short","wedge"].map(type=>{
+        const shots=allShots.filter(s=>s.type===type);
+        const good=shots.filter(s=>s.result==="GOOD").length;
+        const rate=shots.length?Math.round((good/shots.length)*100):0;
+        const label=type==="tee"?"Tee shots":type==="long"?"Long approaches":type==="short"?"Short approaches":"Wedges";
+        return {type,label,total:shots.length,good,rate};
+      });
+
+      const bestType=[...byType].filter(s=>s.total>0).sort((a,b)=>b.rate-a.rate || b.total-a.total)[0];
+      const weakestType=[...byType].filter(s=>s.total>0).sort((a,b)=>a.rate-b.rate || b.total-a.total)[0];
+      const penalties=rounds.reduce((sum,r)=>sum+(r.shots||[]).reduce((s,shot)=>s+(shot.penalty||0),0),0);
+      const avgPenalty=penalties/rounds.length;
+
+      statsWrap.innerHTML=`
+        <div class="round-card stats-panel">
+          <div class="label">Stats</div>
+          <h2>${rounds.length} completed round${rounds.length===1?"":"s"}</h2>
+          <div class="stat-grid-large">
+            <div class="mini-stat"><span>Average score</span><strong>${formatScore(Math.round(averageScore*10)/10)}</strong></div>
+            <div class="mini-stat"><span>Best score</span><strong>${formatScore(bestScore)}</strong></div>
+            <div class="mini-stat"><span>Avg shots</span><strong>${averageStrokes.toFixed(1)}</strong></div>
+            <div class="mini-stat"><span>Good rate</span><strong>${successRate}%</strong></div>
+          </div>
+          <p class="stats-note">Best area: <b>${bestType?bestType.label:"—"}</b>. Practice focus: <b>${weakestType?weakestType.label:"—"}</b>. Average penalty strokes per round: <b>${avgPenalty.toFixed(1)}</b>.</p>
+        </div>
+        <div class="round-card">
+          <div class="label">Shot success</div>
+          ${byType.map(s=>`
+            <div class="shot-stat">
+              <div class="history-item">
+                <div><b>${s.label}</b><p class="stats-note">${s.good}/${s.total} good</p></div>
+                <b>${s.total?s.rate:"—"}${s.total?"%":""}</b>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${s.rate}%"></div></div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="round-card">
+          <div class="label">Best round</div>
+          <h2>${formatScore(bestScore)} · ${bestRound.totalStrokes} shots</h2>
+          <p class="hint">${new Date(bestRound.date).toLocaleDateString()}</p>
+        </div>
+      `;
     }
 
     const holes = [
@@ -863,7 +991,9 @@
     const splashScreen = document.getElementById("splashScreen");
     const menuScreen = document.getElementById("menuScreen");
     const historyWrap=document.getElementById("historyWrap");
+    const statsWrap=document.getElementById("statsWrap");
     const viewHistoryBtn=document.getElementById("viewHistoryBtn");
+    const viewStatsBtn=document.getElementById("viewStatsBtn");
     const appScreen = document.getElementById("appScreen");
     const treeWrap = document.getElementById("treeWrap");
     const edgesSvg = document.getElementById("edges");
@@ -1052,13 +1182,13 @@
       strokes += 1;
 
       if (kind === "good") {
-        log.push({ stroke: strokes, title: node.title, result: "GOOD", penalty: 0 });
+        log.push({ stroke: strokes, title: node.title, type: node.type, result: "GOOD", penalty: 0 });
         if (node.good === "FINISH") return finishHole(0);
         pathEdges.push({ from: current, to: node.good, kind: "good" });
         current = node.good;
       } else {
         const penalty = node.badPenalty || (node.bad === "FINISH_PENALTY" ? 1 : 0);
-        log.push({ stroke: strokes, title: node.title, result: "POOR", penalty });
+        log.push({ stroke: strokes, title: node.title, type: node.type, result: "POOR", penalty });
         if (node.bad === "FINISH_PENALTY") return finishHole(1);
         if (node.bad === "FINISH") return finishHole(0);
         penalties += penalty;
@@ -1099,8 +1229,15 @@
       menuScreen.classList.remove("hidden");
     });
 
+    viewStatsBtn.addEventListener("click",()=>{
+      statsWrap.classList.toggle("hidden");
+      historyWrap.classList.add("hidden");
+      renderStats();
+    });
+
     viewHistoryBtn.addEventListener("click",()=>{
       historyWrap.classList.toggle("hidden");
+      statsWrap.classList.add("hidden");
       renderHistory();
     });
 
