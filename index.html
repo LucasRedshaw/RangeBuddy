@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Range Buddy Prototype</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --good: #16a34a;
+      --bad: #dc2626;
+      --active: #0f172a;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #ffffff 0, var(--bg) 55%);
+      color: var(--ink);
+      padding: 18px;
+    }
+
+    .hidden { display: none !important; }
+
+    .splash {
+      width: min(720px, 100%);
+      min-height: calc(100vh - 36px);
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+    }
+
+    .menu {
+      width: min(720px, 100%);
+      min-height: calc(100vh - 36px);
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+    }
+
+    .menu-card {
+      width: 100%;
+      padding: 34px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #ececec;
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      margin: 0;
+      font-size: clamp(46px, 10vw, 82px);
+      line-height: 0.86;
+      letter-spacing: -0.08em;
+    }
+
+    .menu-copy {
+      margin: 18px 0 28px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.45;
+      max-width: 520px;
+    }
+
+    .round-card {
+      padding: 20px;
+      border: 1px solid #ececec;
+      border-radius: 22px;
+      background: #fff;
+      margin-bottom: 14px;
+    }
+
+    .round-card h2 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .round-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .mini-stat {
+      padding: 13px;
+      border: 1px solid #f0f0f0;
+      border-radius: 16px;
+      background: #fafafa;
+    }
+
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .mini-stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 24px;
+      letter-spacing: -0.05em;
+    }
+
+    .start-btn,
+    .menu-btn {
+      width: 100%;
+      color: #fff;
+      background: var(--ink);
+      box-shadow: none;
+    }
+
+    .menu-btn {
+      margin-top: 12px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .history-item h2 {
+      margin-bottom: 0;
+    }
+
+    .delete-round-btn {
+      flex: 0 0 auto;
+      min-height: auto;
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: #991b1b;
+      background: #fee2e2;
+      box-shadow: inset 0 0 0 1px #fca5a5;
+      font-size: 13px;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid #ececec;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .tree-card {
+      position: relative;
+      min-height: 640px;
+      overflow: hidden;
+      padding: 28px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 42px);
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 74px;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .hole-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-hole {
+      width: 42px;
+      height: 42px;
+      min-height: auto;
+      padding: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px #e5e7eb;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .nav-hole:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .tree-wrap {
+      position: relative;
+      height: 510px;
+      border-radius: 18px;
+      background: linear-gradient(#fafafa, #fff);
+      border: 1px solid #f0f0f0;
+      overflow: hidden;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .edge {
+      stroke: var(--line);
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .edge.good,
+    .edge.bad {
+      stroke: var(--line);
+    }
+
+    .edge.path.good {
+      stroke: var(--good);
+      stroke-width: 5;
+    }
+
+    .edge.path.bad {
+      stroke: var(--bad);
+      stroke-width: 5;
+    }
+
+    .node {
+      position: absolute;
+      width: 96px;
+      min-height: 76px;
+      padding: 11px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #fff;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      transition: transform 180ms ease, box-shadow 180ms ease, border 180ms ease, opacity 180ms ease;
+    }
+
+    .node small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .node strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .node.active {
+      border-color: var(--active);
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
+      transform: translate(-50%, -50%) scale(1.06);
+      z-index: 3;
+    }
+
+    .side-card {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .shot-panel {
+      padding: 24px;
+      border: 1px solid #ededed;
+      border-radius: 20px;
+      background: #fff;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .shot-title {
+      margin: 10px 0 8px;
+      font-size: clamp(34px, 5vw, 54px);
+      letter-spacing: -0.07em;
+      line-height: 0.9;
+    }
+
+    .hint {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 18px;
+      padding: 18px 16px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.88; }
+
+    .good-btn {
+      color: #065f46;
+      background: #dcfce7;
+      box-shadow: inset 0 0 0 1px #86efac;
+    }
+
+    .bad-btn {
+      color: #991b1b;
+      background: #fee2e2;
+      box-shadow: inset 0 0 0 1px #fca5a5;
+    }
+
+    .reset-btn,
+    .next-hole-btn,
+    .back-menu-btn {
+      color: var(--ink);
+      background: #f3f4f6;
+      box-shadow: inset 0 0 0 1px #e5e7eb;
+    }
+
+    .next-hole-btn {
+      display: none;
+      width: 100%;
+      margin-top: 12px;
+      color: #fff;
+      background: var(--ink);
+      box-shadow: none;
+    }
+
+    .next-hole-btn.show { display: block; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      padding: 16px;
+      border: 1px solid #ededed;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 28px;
+      letter-spacing: -0.05em;
+    }
+
+    .log {
+      padding: 18px;
+      border: 1px solid #ededed;
+      border-radius: 20px;
+      background: #fff;
+      flex: 1;
+      min-height: 160px;
+    }
+
+    .log h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .log-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .log-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .log-list b { color: var(--ink); }
+    .result-good { color: var(--good); font-weight: 900; }
+    .result-bad { color: var(--bad); font-weight: 900; }
+
+    .complete {
+      display: none;
+      padding: 18px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .complete.show { display: block; }
+
+    .summary-title {
+      font-weight: 900;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .summary-list li,
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .summary-list b,
+    .summary-total b {
+      color: var(--ink);
+    }
+
+    .summary-total {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+      font-weight: 900;
+    }
+
+    @media (max-width: 920px) {
+      body { padding: 0; background: #fff; }
+
+      .menu {
+        min-height: 100vh;
+        padding: 16px;
+      }
+
+      .menu-card {
+        padding: 24px;
+        border-radius: 26px;
+      }
+
+      .round-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .card {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+        box-shadow: none;
+      }
+
+      .tree-card {
+        order: 1;
+        min-height: auto;
+        padding: 18px 16px 12px;
+        border-bottom: 0;
+      }
+
+      header { align-items: center; margin-bottom: 14px; }
+      h1 { font-size: 30px; }
+      .subtle { font-size: 13px; margin-top: 4px; }
+      .pill { min-width: 64px; padding: 8px 12px; font-size: 13px; }
+
+      .nav-hole {
+        width: 38px;
+        height: 38px;
+        font-size: 22px;
+      }
+
+      .tree-wrap {
+        height: 320px;
+        border-radius: 20px;
+      }
+
+      .tree-wrap[data-par="3"] { height: 260px; }
+      .tree-wrap[data-par="4"] { height: 320px; }
+      .tree-wrap[data-par="5"] { height: 390px; }
+
+      .side-card {
+        order: 2;
+        padding: 0 16px 16px;
+        gap: 12px;
+        border-top: 0;
+      }
+
+      .shot-panel {
+        position: sticky;
+        bottom: 12px;
+        z-index: 10;
+        padding: 18px;
+        border-radius: 22px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+      }
+
+      .label { font-size: 11px; }
+      .shot-title { font-size: 38px; margin: 8px 0 6px; }
+      .hint { font-size: 14px; }
+      .actions { gap: 10px; margin-top: 16px; }
+
+      button {
+        min-height: 64px;
+        border-radius: 18px;
+        padding: 16px 12px;
+      }
+
+      .stats {
+        order: -1;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .stat { padding: 12px; border-radius: 16px; }
+      .stat span { font-size: 10px; }
+      .stat strong { font-size: 24px; margin-top: 4px; }
+
+      .log {
+        min-height: 118px;
+        max-height: 180px;
+        overflow: auto;
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .reset-btn,
+      .back-menu-btn { min-height: 56px; }
+
+      .node {
+        width: 76px;
+        min-height: 58px;
+        padding: 8px 7px;
+        border-radius: 15px;
+      }
+
+      .node small { font-size: 10px; margin-bottom: 4px; }
+      .node strong { font-size: 12px; }
+    }
+
+    @media (max-width: 420px) {
+      .tree-wrap[data-par="3"] { height: 240px; }
+      .tree-wrap[data-par="4"] { height: 300px; }
+      .tree-wrap[data-par="5"] { height: 360px; }
+      .node { width: 68px; min-height: 54px; }
+      .node strong { font-size: 11px; }
+      .shot-title { font-size: 34px; }
+      .hole-actions { gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="splash" id="splashScreen">
+    <div class="menu-card">
+      <h1 class="brand">Range Buddy</h1>
+      <p class="menu-copy">Play golf on the range using a simple decision tree.</p>
+      <div class="round-card">
+        <h2>How it works</h2>
+        <ul class="summary-list">
+          <li><span>1. Hit your shot</span><b></b></li>
+          <li><span>2. Tap GOOD or POOR</span><b></b></li>
+          <li><span>3. Follow the path</span><b></b></li>
+          <li><span>Finish each hole</span><b></b></li>
+        </ul>
+      </div>
+      <button class="start-btn" id="enterAppBtn">Play</button>
+    </div>
+  </section>
+  <section class="menu" id="menuScreen">
+    <div class="menu-card">
+      <h1 class="brand">Range Buddy</h1>
+      <p class="menu-copy">Play a clean 9-hole range round using simple good/poor decisions. No course graphics, no overthinking, just structured club changes.</p>
+
+      <div class="round-card">
+        <div class="label">Round</div>
+        <h2>9 Hole Range Round</h2>
+        <p class="hint">A par 36 set: two par 3s, five par 4s, and two par 5s.</p>
+        <div class="round-grid">
+          <div class="mini-stat"><span>Holes</span><strong>9</strong></div>
+          <div class="mini-stat"><span>Par</span><strong>36</strong></div>
+          <div class="mini-stat"><span>Format</span><strong>Tree</strong></div>
+        </div>
+      </div>
+
+      <button class="start-btn" id="startRoundBtn">Start 9 hole round</button>
+      <button class="menu-btn" id="viewHistoryBtn">View history</button>
+      <div id="historyWrap" class="hidden"></div>
+    </div>
+  </section>
+
+  <main class="app hidden" id="appScreen">
+    <section class="card tree-card">
+      <header>
+        <div>
+          <h1>Range Buddy</h1>
+          <div class="subtle" id="holeMeta">Hole 1 · Par 3</div>
+        </div>
+        <div class="hole-actions">
+          <button class="nav-hole" id="prevHoleBtn">‹</button>
+          <div class="pill" id="scorePill">Hole 1/9</div>
+          <button class="nav-hole" id="nextHoleBtn">›</button>
+        </div>
+      </header>
+
+      <div class="tree-wrap" id="treeWrap">
+        <svg viewBox="0 0 800 510" preserveAspectRatio="none" id="edges"></svg>
+      </div>
+    </section>
+
+    <aside class="card side-card">
+      <div class="shot-panel">
+        <div class="label">Current shot</div>
+        <h2 class="shot-title" id="shotTitle">Tee Shot</h2>
+        <p class="hint" id="shotHint">Pick the club that fits your tee-shot intent. Hit, judge quickly, then move on.</p>
+        <div class="actions" id="actionButtons">
+          <button class="good-btn" id="goodBtn">GOOD</button>
+          <button class="bad-btn" id="badBtn">POOR</button>
+        </div>
+        <div class="complete" id="completeBox"></div>
+        <button class="next-hole-btn" id="completeNextBtn">Next hole</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span>Strokes</span><strong id="strokes">0</strong></div>
+        <div class="stat"><span>Penalty</span><strong id="penalties">0</strong></div>
+        <div class="stat"><span>Score</span><strong id="roundScore">E</strong></div>
+      </div>
+
+      <div class="log">
+        <h2>Shot log</h2>
+        <ul class="log-list" id="logList"></ul>
+      </div>
+
+      <button class="reset-btn" id="resetBtn">Reset hole</button>
+      <button class="back-menu-btn" id="backMenuBtn">Back to menu</button>
+    </aside>
+  </main>
+
+  <script>
+    const shotHints = {
+      tee: "Tee shot. Pick the club that fits the hole and your current practice focus.",
+      long: "Long approach. Choose the longer approach club that makes sense for you.",
+      short: "Short approach. Controlled iron or shorter scoring approach.",
+      wedge: "Wedge shot. Simple scoring-shot intent, judged by your own standard.",
+      finish: "Hole complete."
+    };
+
+    function buildHole(number, par, title, topTypes) {
+      const rows = par - 1;
+      const nodes = {};
+      const positions = {};
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const rowIds = [];
+      let idx = 0;
+
+      for (let r = 0; r < rows; r++) {
+        const count = rows - r;
+        rowIds[r] = [];
+        for (let c = 0; c < count; c++) {
+          const id = letters[idx++];
+          rowIds[r].push(id);
+          const type = topTypes[Math.min(c + r, topTypes.length - 1)] || "wedge";
+          const label = type === "tee" ? "Tee Shot" : type === "long" ? "Long Approach" : type === "short" ? "Short Approach" : "Wedge";
+          nodes[id] = { id, title: label, type };
+        }
+      }
+
+      for (let r = 0; r < rows; r++) {
+        const count = rowIds[r].length;
+        const ySpread = rows === 2 ? 46 : rows === 3 ? 58 : 66;
+        const yStart = rows === 2 ? 24 : rows === 3 ? 19 : 14;
+        const y = rows === 1 ? 50 : yStart + r * (ySpread / (rows - 1));
+        const startX = rows === 2 ? 16 + r * 11 : rows === 3 ? 14 + r * 13 : 10 + r * 11;
+        const stepX = rows === 2 ? 34 : rows === 3 ? 28 : 24;
+        for (let c = 0; c < count; c++) {
+          positions[rowIds[r][c]] = { x: startX + c * stepX, y };
+        }
+      }
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < rowIds[r].length; c++) {
+          const id = rowIds[r][c];
+          const node = nodes[id];
+          const isTop = r === 0;
+          const isLastTop = isTop && c === rowIds[0].length - 1;
+
+          if (isLastTop) {
+            node.good = "FINISH";
+            node.bad = "FINISH_PENALTY";
+            continue;
+          }
+
+          if (isTop) {
+            node.good = rowIds[0][c + 1];
+            node.bad = rowIds[1][c];
+            continue;
+          }
+
+          node.good = rowIds[r - 1][c + 1];
+
+          const lowerNode = r < rows - 1 ? rowIds[r + 1][c] : null;
+
+          if (lowerNode) {
+            node.bad = lowerNode;
+          } else {
+            node.bad = node.good;
+            node.badPenalty = 1;
+          }
+        }
+      }
+
+      return { number, par, title, nodes, positions };
+    }
+
+    // ===== Local Storage =====
+    function getRounds(){return JSON.parse(localStorage.getItem("rangeBuddyRounds")||"[]");}
+    function saveRound(){
+      const rounds=getRounds();
+      const round={
+        date:new Date().toISOString(),
+        totalScore:roundScore(),
+        totalStrokes:holeResults.reduce((s,r)=>s+(r?.total||0),0),
+        holes:holeResults.map((r,i)=>({hole:i+1,par:holes[i].par,strokes:r?.total||0,score:r?.score||0}))
+      };
+      rounds.unshift(round);
+      localStorage.setItem("rangeBuddyRounds",JSON.stringify(rounds));
+    }
+
+    function renderHistory(){
+      const el=document.getElementById("historyWrap");
+      const rounds=getRounds();
+      if(!rounds.length){el.innerHTML="<p class='hint'>No rounds yet.</p>";return;}
+      el.innerHTML=rounds.map((r,index)=>`<div class="round-card history-item">
+        <div>
+          <div class="label">${new Date(r.date).toLocaleDateString()}</div>
+          <h2>${r.totalScore>0?"+":""}${r.totalScore} · ${r.totalStrokes} shots</h2>
+        </div>
+        <button class="delete-round-btn" data-round-index="${index}">Delete</button>
+      </div>`).join("");
+    }
+
+    function deleteRound(index){
+      const rounds=getRounds();
+      rounds.splice(index,1);
+      localStorage.setItem("rangeBuddyRounds",JSON.stringify(rounds));
+      renderHistory();
+    }
+
+    const holes = [
+      buildHole(1, 4, "Opening Par 4", ["tee", "long", "wedge"]),
+      buildHole(2, 3, "Target Par 3", ["tee", "wedge"]),
+      buildHole(3, 4, "Balanced Par 4", ["tee", "long", "short"]),
+      buildHole(4, 5, "Reachable Par 5", ["tee", "long", "long", "wedge"]),
+      buildHole(5, 4, "Control Par 4", ["tee", "long", "wedge"]),
+      buildHole(6, 3, "Scoring Par 3", ["tee", "wedge"]),
+      buildHole(7, 4, "Pressure Par 4", ["tee", "long", "short"]),
+      buildHole(8, 5, "Finishing Par 5", ["tee", "long", "long", "wedge"]),
+      buildHole(9, 4, "Final Par 4", ["tee", "long", "wedge"])
+    ];
+
+    let holeIndex = 0;
+    let nodes = holes[holeIndex].nodes;
+    let positions = holes[holeIndex].positions;
+
+    let current = "A";
+    let strokes = 0;
+    let penalties = 0;
+    let pathEdges = [];
+    let visited = ["A"];
+    let log = [];
+    let complete = false;
+    let holeResults = Array(holes.length).fill(null);
+    let holeStates = Array(holes.length).fill(null);
+
+    const splashScreen = document.getElementById("splashScreen");
+    const menuScreen = document.getElementById("menuScreen");
+    const historyWrap=document.getElementById("historyWrap");
+    const viewHistoryBtn=document.getElementById("viewHistoryBtn");
+    const appScreen = document.getElementById("appScreen");
+    const treeWrap = document.getElementById("treeWrap");
+    const edgesSvg = document.getElementById("edges");
+    const shotTitle = document.getElementById("shotTitle");
+    const shotHint = document.getElementById("shotHint");
+    const strokesEl = document.getElementById("strokes");
+    const penaltiesEl = document.getElementById("penalties");
+    const roundScoreEl = document.getElementById("roundScore");
+    const scorePill = document.getElementById("scorePill");
+    const logList = document.getElementById("logList");
+    const completeBox = document.getElementById("completeBox");
+    const actionButtons = document.getElementById("actionButtons");
+    const holeMeta = document.getElementById("holeMeta");
+    const prevHoleBtn = document.getElementById("prevHoleBtn");
+    const nextHoleBtn = document.getElementById("nextHoleBtn");
+    const completeNextBtn = document.getElementById("completeNextBtn");
+
+    function formatScore(score) {
+      if (score === 0) return "E";
+      return score > 0 ? `+${score}` : `${score}`;
+    }
+
+    function roundScore() {
+      return holeResults.reduce((sum, result) => sum + (result ? result.score : 0), 0);
+    }
+
+    function saveHoleState() {
+      holeStates[holeIndex] = {
+        current,
+        strokes,
+        penalties,
+        pathEdges: [...pathEdges],
+        visited: [...visited],
+        log: [...log],
+        complete
+      };
+    }
+
+    function restoreHoleState(index) {
+      nodes = holes[index].nodes;
+      positions = holes[index].positions;
+      const saved = holeStates[index];
+
+      current = saved ? saved.current : "A";
+      strokes = saved ? saved.strokes : 0;
+      penalties = saved ? saved.penalties : 0;
+      pathEdges = saved ? [...saved.pathEdges] : [];
+      visited = saved ? [...saved.visited] : ["A"];
+      log = saved ? [...saved.log] : [];
+      complete = saved ? saved.complete : false;
+    }
+
+    function roundSummaryHtml() {
+      const rows = holes.map((hole, index) => {
+        const result = holeResults[index];
+        const score = result ? formatScore(result.score) : "—";
+        const total = result ? result.total : "—";
+        return `<li><span>Hole ${hole.number} · Par ${hole.par}</span><b>${total} (${score})</b></li>`;
+      }).join("");
+
+      const totalStrokes = holeResults.reduce((sum, result) => sum + (result ? result.total : 0), 0);
+      return `
+        <div class="summary-title">Round summary</div>
+        <ul class="summary-list">${rows}</ul>
+        <div class="summary-total"><span>Total</span><b>${totalStrokes} (${formatScore(roundScore())})</b></div>
+      `;
+    }
+
+    function edgePath(from, to) {
+      const a = positions[from];
+      const b = positions[to];
+      const x1 = a.x * 8;
+      const y1 = a.y * 5.1;
+      const x2 = b.x * 8;
+      const y2 = b.y * 5.1;
+      const midX = (x1 + x2) / 2;
+      return `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+    }
+
+    function drawEdges() {
+      const allEdges = [];
+      Object.values(nodes).forEach(node => {
+        ["good", "bad"].forEach(kind => {
+          const to = node[kind];
+          if (to && nodes[to]) allEdges.push({ from: node.id, to, kind });
+        });
+      });
+
+      const defs = `
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#cbd5e1"></path>
+          </marker>
+        </defs>
+      `;
+
+      const base = allEdges.map(e => {
+        const isPath = pathEdges.some(p => p.from === e.from && p.to === e.to && p.kind === e.kind);
+        const classes = ["edge", e.kind, isPath ? "path" : ""].join(" ");
+        return `<path class="${classes}" d="${edgePath(e.from, e.to)}" marker-end="url(#arrow)"></path>`;
+      }).join("");
+
+      edgesSvg.innerHTML = defs + base;
+    }
+
+    function drawNodes() {
+      document.querySelectorAll(".node").forEach(el => el.remove());
+      Object.values(nodes).forEach(node => {
+        const pos = positions[node.id];
+        const el = document.createElement("div");
+        el.className = "node";
+        if (current === node.id && !complete) el.classList.add("active");
+        el.style.left = `${pos.x}%`;
+        el.style.top = `${pos.y}%`;
+        el.innerHTML = `<small>${node.id}</small><strong>${node.title}</strong>`;
+        treeWrap.appendChild(el);
+      });
+    }
+
+    function updatePanel() {
+      const node = nodes[current];
+      const hole = holes[holeIndex];
+      treeWrap.dataset.par = hole.par;
+      const holeScore = strokes + penalties - hole.par;
+      const totalRoundScore = roundScore();
+
+      shotTitle.textContent = complete ? "Hole Complete" : node.title;
+      shotHint.textContent = complete ? "Reset the hole, continue, or return to the menu." : shotHints[node.type];
+      strokesEl.textContent = strokes;
+      penaltiesEl.textContent = penalties;
+      roundScoreEl.textContent = formatScore(totalRoundScore);
+      holeMeta.textContent = `Hole ${hole.number} · Par ${hole.par} · ${hole.title}`;
+      scorePill.textContent = complete ? formatScore(holeScore) : `Hole ${hole.number}/${holes.length}`;
+      prevHoleBtn.disabled = holeIndex === 0;
+      nextHoleBtn.disabled = holeIndex === holes.length - 1;
+      actionButtons.style.display = complete ? "none" : "grid";
+      completeBox.classList.toggle("show", complete);
+      completeNextBtn.classList.toggle("show", complete && holeIndex < holes.length - 1);
+
+      if (complete) {
+        const total = strokes + penalties;
+        const scoreText = holeScore === 0 ? "even par" : formatScore(holeScore);
+        const nextText = holeIndex < holes.length - 1 ? "Tap next hole when ready." : "Round complete.";
+        completeBox.innerHTML = holeIndex < holes.length - 1
+          ? `<b>Hole finished.</b><br>Total: ${total} strokes (${scoreText}).<br>${nextText}`
+          : `<b>Hole finished.</b><br>Total: ${total} strokes (${scoreText}).<br>${nextText}<br><br>${roundSummaryHtml()}`;
+      } else {
+        completeBox.innerHTML = "";
+      }
+
+      logList.innerHTML = log.map(item => `
+        <li>
+          <span><b>${item.stroke}.</b> ${item.title}</span>
+          <span class="${item.result === "GOOD" ? "result-good" : "result-bad"}">${item.result}${item.penalty ? " +1" : ""}</span>
+        </li>
+      `).join("");
+    }
+
+    function render() {
+      drawEdges();
+      drawNodes();
+      updatePanel();
+    }
+
+    function finishHole(extraPenalty = 0) {
+      penalties += extraPenalty;
+      const hole = holes[holeIndex];
+      complete = true;
+      holeResults[holeIndex] = {
+        strokes,
+        penalties,
+        total: strokes + penalties,
+        score: strokes + penalties - hole.par
+      };
+      saveHoleState();
+
+      // Save round at end
+      if(holeIndex===holes.length-1){ saveRound(); }
+
+      render();
+    }
+
+    function takeShot(kind) {
+      if (complete) return;
+      const node = nodes[current];
+      strokes += 1;
+
+      if (kind === "good") {
+        log.push({ stroke: strokes, title: node.title, result: "GOOD", penalty: 0 });
+        if (node.good === "FINISH") return finishHole(0);
+        pathEdges.push({ from: current, to: node.good, kind: "good" });
+        current = node.good;
+      } else {
+        const penalty = node.badPenalty || (node.bad === "FINISH_PENALTY" ? 1 : 0);
+        log.push({ stroke: strokes, title: node.title, result: "POOR", penalty });
+        if (node.bad === "FINISH_PENALTY") return finishHole(1);
+        if (node.bad === "FINISH") return finishHole(0);
+        penalties += penalty;
+        pathEdges.push({ from: current, to: node.bad, kind: "bad" });
+        current = node.bad;
+      }
+
+      visited.push(current);
+      saveHoleState();
+      render();
+    }
+
+    function reset() {
+      nodes = holes[holeIndex].nodes;
+      positions = holes[holeIndex].positions;
+      current = "A";
+      strokes = 0;
+      penalties = 0;
+      pathEdges = [];
+      visited = ["A"];
+      log = [];
+      complete = false;
+      holeResults[holeIndex] = null;
+      holeStates[holeIndex] = null;
+      render();
+    }
+
+    function goToHole(index) {
+      if (index < 0 || index >= holes.length) return;
+      saveHoleState();
+      holeIndex = index;
+      restoreHoleState(index);
+      render();
+    }
+
+    document.getElementById("enterAppBtn").addEventListener("click", () => {
+      splashScreen.classList.add("hidden");
+      menuScreen.classList.remove("hidden");
+    });
+
+    viewHistoryBtn.addEventListener("click",()=>{
+      historyWrap.classList.toggle("hidden");
+      renderHistory();
+    });
+
+    function startRound() {
+      holeIndex = 0;
+      holeResults = Array(holes.length).fill(null);
+      holeStates = Array(holes.length).fill(null);
+      menuScreen.classList.add("hidden");
+      appScreen.classList.remove("hidden");
+      reset();
+    }
+
+    function backToMenu() {
+      appScreen.classList.add("hidden");
+      menuScreen.classList.remove("hidden");
+    }
+
+    historyWrap.addEventListener("click",e=>{
+      const button=e.target.closest(".delete-round-btn");
+      if(!button)return;
+      deleteRound(Number(button.dataset.roundIndex));
+    });
+
+    document.getElementById("startRoundBtn").addEventListener("click", startRound);
+    document.getElementById("goodBtn").addEventListener("click", () => takeShot("good"));
+    document.getElementById("badBtn").addEventListener("click", () => takeShot("bad"));
+    document.getElementById("resetBtn").addEventListener("click", reset);
+    document.getElementById("backMenuBtn").addEventListener("click", backToMenu);
+    prevHoleBtn.addEventListener("click", () => goToHole(holeIndex - 1));
+    nextHoleBtn.addEventListener("click", () => goToHole(holeIndex + 1));
+    completeNextBtn.addEventListener("click", () => goToHole(holeIndex + 1));
+  </script>
+</body>
+</html>
